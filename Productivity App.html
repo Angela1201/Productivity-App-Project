@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Blossom Productivity</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #ffeaf4;
+      color: #5a3e5c;
+    }
+    header {
+      background: #ffcce5;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    header h1 {
+      font-size: 32px;
+      margin: 0;
+      color: #a64d79;
+    }
+    .bow {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+    }
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .date-banner {
+      background: #fff;
+      border: 2px solid #ff99cc;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      color: #d63384;
+      margin-bottom: 20px;
+    }
+    .reminders {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(255, 105, 180, 0.2);
+    }
+    .reminders h2 {
+      margin-top: 0;
+      color: #a64d79;
+    }
+    .reminder-item {
+      background: #fff0f5;
+      border: 1px solid #ffcce5;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reminder-item.done {
+      opacity: 0.6;
+      text-decoration: line-through;
+    }
+    .add-button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #ff99cc;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ffcce5;
+      margin-bottom: 10px;
+    }
+    .actions button {
+      background: none;
+      border: none;
+      color: #d63384;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bow">🎀</div>
+    <h1>Productivity</h1>
+  </header>
+
+  <div class="container">
+    <div class="date-banner" id="dateBanner"></div>
+
+    <section class="reminders">
+      <h2>Reminders</h2>
+      <input type="text" id="reminderInput" placeholder="e.g., Emily's birthday" />
+      <button class="add-button" onclick="addReminder()">+ Add Reminder</button>
+      <div id="reminderList"></div>
+    </section>
+  </div>
+
+  <script>
+    const reminderInput = document.getElementById('reminderInput');
+    const reminderList = document.getElementById('reminderList');
+    const dateBanner = document.getElementById('dateBanner');
+
+    // Show current month
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+    const now = new Date();
+    dateBanner.textContent = monthNames[now.getMonth()];
+
+    // Load reminders
+    let reminders = JSON.parse(localStorage.getItem('girlyReminders') || '[]');
+    renderReminders();
+
+    function addReminder() {
+      const text = reminderInput.value.trim();
+      if (!text) return;
+      const reminder = {
+        id: Date.now(),
+        text,
+        done: false
+      };
+      reminders.push(reminder);
+      saveReminders();
+      renderReminders();
+      reminderInput.value = '';
+      scheduleNotification(reminder);
+    }
+
+    function toggleDone(id) {
+      reminders = reminders.map(r => r.id === id ? {...r, done: !r.done} : r);
+      saveReminders();
+      renderReminders();
+    }
+
+    function deleteReminder(id) {
+      reminders = reminders.filter(r => r.id !== id);
+      saveReminders();
+      renderReminders();
+    }
+
+    function saveReminders() {
+      localStorage.setItem('girlyReminders', JSON.stringify(reminders));
+    }
+
+    function renderReminders() {
+      reminderList.innerHTML = '';
+      reminders.forEach(reminder => {
+        const div = document.createElement('div');
+        div.className = 'reminder-item' + (reminder.done ? ' done' : '');
+        div.innerHTML = `
+          <span>${reminder.text}</span>
+          <div class="actions">
+            <button onclick="toggleDone(${reminder.id})">${reminder.done ? 'Undo' : 'Done'}</button>
+            <button onclick="deleteReminder(${reminder.id})">Delete</button>
+          </div>
+        `;
+        reminderList.appendChild(div);
+      });
+    }
+
+    function scheduleNotification(reminder) {
+      if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      }
+      if (Notification.permission === 'granted') {
+        setTimeout(() => {
+          new Notification('Reminder ✨', {
+            body: reminder.text,
+            icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Pink_bow_icon.svg/120px-Pink_bow_icon.svg.png'
+          });
+        }, 5000); // 5 seconds later for demo
+      }
+    }
+  </script>
+</body>
+</html>
